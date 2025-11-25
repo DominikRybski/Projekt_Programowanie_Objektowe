@@ -1,5 +1,5 @@
 using ParkingSystem.Models;
-namespace ParkingSystem.Models
+namespace ParkingSystem
 {
     public class Parking
     {

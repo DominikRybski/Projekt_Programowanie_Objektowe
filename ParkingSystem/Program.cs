@@ -1,5 +1,4 @@
-﻿// Program.cs
-using ParkingSystem.Models; 
+﻿using ParkingSystem; 
 
 Console.WriteLine("System Obsługi Parkingu.");
 
