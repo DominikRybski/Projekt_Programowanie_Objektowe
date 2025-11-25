@@ -1,1 +1,0 @@
-# Projekt_Programowanie_Objektowe
