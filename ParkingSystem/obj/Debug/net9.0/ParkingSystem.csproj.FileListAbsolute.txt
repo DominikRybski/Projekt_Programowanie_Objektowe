@@ -1,0 +1,15 @@
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/bin/Debug/net9.0/ParkingSystem
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/bin/Debug/net9.0/ParkingSystem.deps.json
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/bin/Debug/net9.0/ParkingSystem.runtimeconfig.json
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/bin/Debug/net9.0/ParkingSystem.dll
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/bin/Debug/net9.0/ParkingSystem.pdb
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/obj/Debug/net9.0/ParkingSystem.GeneratedMSBuildEditorConfig.editorconfig
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/obj/Debug/net9.0/ParkingSystem.AssemblyInfoInputs.cache
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/obj/Debug/net9.0/ParkingSystem.AssemblyInfo.cs
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/obj/Debug/net9.0/ParkingSystem.csproj.CoreCompileInputs.cache
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/obj/Debug/net9.0/ParkingSystem.sourcelink.json
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/obj/Debug/net9.0/ParkingSystem.dll
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/obj/Debug/net9.0/refint/ParkingSystem.dll
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/obj/Debug/net9.0/ParkingSystem.pdb
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/obj/Debug/net9.0/ParkingSystem.genruntimeconfig.cache
+/Users/dominik/Documents/Studia/Projekt_Programowanie_Objektowe/ParkingSystem/obj/Debug/net9.0/ref/ParkingSystem.dll
