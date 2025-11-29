@@ -1,5 +1,6 @@
 using ParkingSystem.Models;
 using System.Linq;
+using ParkingSystem.Services;
 
 namespace ParkingSystem
 {
@@ -10,7 +11,8 @@ namespace ParkingSystem
 
         private string?[,] SiatkaMiejsc;
         private List<Pojazd> PojazdyNaParkingu;
-        private List<Transakcja> HistoriaTransakcji;
+        
+        private MySqlManager _dbManager = new MySqlManager();
         
         public Parking(int wiersze, int kolumny)
         {
@@ -19,7 +21,6 @@ namespace ParkingSystem
 
             SiatkaMiejsc = new string[wiersze, kolumny];
             PojazdyNaParkingu = new List<Pojazd>();
-            HistoriaTransakcji = new List<Transakcja>();
         }
 
         public void Wizualizacja()
@@ -132,12 +133,7 @@ namespace ParkingSystem
 
             PojazdyNaParkingu.Add(nowyPojazd);
             
-            HistoriaTransakcji.Add(new Transakcja()
-            {
-                NrRejestracyjny = nowyPojazd.NrRejestracyjny,
-                DataCzas = DateTime.Now,
-                TypOperacji = "Przyjazd"
-            });
+            _dbManager.ZapiszTransakcje(nowyPojazd.NrRejestracyjny, DateTime.Now, "Przyjazd");
 
             Console.WriteLine($"POWODZENIE: Dodano {nowyPojazd.WyswietlTypPojazdu()} ({nowyPojazd.NrRejestracyjny}).");
             return true;
@@ -160,15 +156,12 @@ namespace ParkingSystem
         
         PojazdyNaParkingu.Remove(pojazdDoUsuniecia);
 
-        HistoriaTransakcji.Add(new Transakcja()
-        {
-            NrRejestracyjny = nrRejestracyjny,
-            DataCzas = DateTime.Now,
-            TypOperacji = "Odjazd"
-        });
+        _dbManager.ZapiszTransakcje(pojazdDoUsuniecia.NrRejestracyjny, DateTime.Now, "Odjazd");
 
         Console.WriteLine($"POWODZENIE: Usunięto {pojazdDoUsuniecia.WyswietlTypPojazdu()} ({nrRejestracyjny}). Miejsca zwolnione.");
         return true;
         }
     }
 }
+
+
