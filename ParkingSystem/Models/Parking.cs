@@ -1,5 +1,5 @@
 using ParkingSystem.Models;
-using System.Linq; // Potrzebne do metody Any()
+using System.Linq;
 
 namespace ParkingSystem
 {
@@ -8,7 +8,7 @@ namespace ParkingSystem
         public readonly int LiczbaWierszy;
         public readonly int LiczbaKolumn;
 
-        private string[,] SiatkaMiejsc;
+        private string?[,] SiatkaMiejsc;
         private List<Pojazd> PojazdyNaParkingu;
         private List<Transakcja> HistoriaTransakcji;
         
@@ -45,7 +45,7 @@ namespace ParkingSystem
         
         public bool DodajPojazd(Pojazd nowyPojazd, int startWiersz, int startKolumna)
         {
-            // 1. Walidacja Wstępna
+            
             if (startWiersz < 0 || startWiersz >= LiczbaWierszy || startKolumna < 0 || startKolumna >= LiczbaKolumn)
             {
                 Console.WriteLine($"Błąd: Współrzędne: ({startWiersz},{startKolumna}) poza parkingiem."); 
@@ -62,7 +62,7 @@ namespace ParkingSystem
                 return false;
             }
             
-            // 2. Logika Alokacji
+            
             List<(int r, int k)> polaDoZajecia = new List<(int r, int k)>();
 
             if (nowyPojazd.RozmiarWymagany == 1 || nowyPojazd.RozmiarWymagany == 2)
@@ -77,7 +77,7 @@ namespace ParkingSystem
 
                 for (int k = 0; k < requiredSize; k++)
                 {
-                    // Sprawdzenie miejsca [wiersz, kolumna startowa + k]
+                    
                     if (!string.IsNullOrEmpty(SiatkaMiejsc[startWiersz, startKolumna + k])) 
                     {
                         Console.WriteLine($"Błąd: Miejsce w rzędzie {startWiersz} i kolumnie {startKolumna + k} jest juz zajete."); 
@@ -89,17 +89,17 @@ namespace ParkingSystem
             }
             else if (nowyPojazd.RozmiarWymagany == 4)
             {
-                // Walidacja 1: Czy starczy miejsca w wymiarach 2x2
+                
                 if (startWiersz + 1 >= LiczbaWierszy || startKolumna + 1 >= LiczbaKolumn)
                 {
                     Console.WriteLine("BŁĄD: Za mało miejsca na autobus (wymagany blok 2x2).");
                     return false;
                 }
                 
-                // Sprawdzanie dostępności całego bloku 2x2
+                
                 for (int r = startWiersz; r < startWiersz + 2; r++)
                 {
-                    // Weryfikacja: Czy drugi wiersz nie jest przypadkiem przejazdem (choć już zabezpieczone logicznie, warto sprawdzić)
+                    
                     if (r % 3 == 2)
                     {
                         Console.WriteLine($"BŁĄD: Rząd {r} jest przejazdem! Nie można parkować 2x2.");
@@ -123,7 +123,7 @@ namespace ParkingSystem
                 return false;
             }
 
-            // 3. REZERWACJA MIEJSC I ZAPIS STANU 
+            
             foreach (var pole in polaDoZajecia)
             {
                 SiatkaMiejsc[pole.r, pole.k] = nowyPojazd.NrRejestracyjny;
@@ -141,6 +141,34 @@ namespace ParkingSystem
 
             Console.WriteLine($"POWODZENIE: Dodano {nowyPojazd.WyswietlTypPojazdu()} ({nowyPojazd.NrRejestracyjny}).");
             return true;
+        }
+        public bool UsunPojazd(string nrRejestracyjny)
+        {
+            Pojazd? pojazdDoUsuniecia = PojazdyNaParkingu.FirstOrDefault(pojazdDoUsuniecia => pojazdDoUsuniecia.NrRejestracyjny == nrRejestracyjny);
+            
+            if (pojazdDoUsuniecia == null)
+            {
+                Console.WriteLine($"BŁĄD: Pojazd o numerze {nrRejestracyjny} nie został znaleziony na parkingu.");
+                return false;            
+            }
+        
+
+        foreach (var pole in pojazdDoUsuniecia.WspolrzedneZajete)
+        {
+            SiatkaMiejsc[pole.Wiersz, pole.Kolumna] = null;
+        }
+        
+        PojazdyNaParkingu.Remove(pojazdDoUsuniecia);
+
+        HistoriaTransakcji.Add(new Transakcja()
+        {
+            NrRejestracyjny = nrRejestracyjny,
+            DataCzas = DateTime.Now,
+            TypOperacji = "Odjazd"
+        });
+
+        Console.WriteLine($"POWODZENIE: Usunięto {pojazdDoUsuniecia.WyswietlTypPojazdu()} ({nrRejestracyjny}). Miejsca zwolnione.");
+        return true;
         }
     }
 }
