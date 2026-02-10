@@ -1,5 +1,6 @@
 ﻿using ParkingSystem;
 using ParkingSystem.Models;
+using System.Collections.Generic;
 
 Console.WriteLine("System Obsługi Parkingu.");
 

@@ -1,0 +1,5 @@
+{
+	"ConnectionStrings": {
+		"DefaultConnection": "Server=YOUR_SERVER;Database=YOUR_DB;User Id=sa;Password=YOUR_PASSWORD;"
+	}
+}

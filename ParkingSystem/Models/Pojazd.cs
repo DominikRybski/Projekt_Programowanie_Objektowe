@@ -7,7 +7,7 @@ namespace ParkingSystem.Models
 
         public abstract int RozmiarWymagany {get;}
 
-       public List<(int Wiersz, int Kolumna)> WspolrzedneZajete { get; set; } = new List<(int Wiersz, int Kolumna)>();
+       public List<(int Wiersz, int Kolumna)> WspolrzedneZajete { get; private set; } = new List<(int Wiersz, int Kolumna)>();
 
         public Pojazd(string nrRejestracyjny)
         {
@@ -20,7 +20,7 @@ namespace ParkingSystem.Models
         {
             Console.WriteLine($"--- INFORMACJE O POJEZDZIE ---");
             Console.WriteLine($"Numer Rejestracyjny: {NrRejestracyjny}");
-            Console.WriteLine($"Typ: {WyswietlTypPojazdu}");
+            Console.WriteLine($"Typ: {WyswietlTypPojazdu()}");
             Console.WriteLine($"Zajmuje: {RozmiarWymagany}");
         }
 
