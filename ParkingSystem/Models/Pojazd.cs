@@ -1,6 +1,9 @@
+using ParkingSystem.Interfaces;
+using ParkingSystem.Helpers;
+
 namespace ParkingSystem.Models
 {
-    public abstract class Pojazd
+    public abstract class Pojazd : IPojazd
     {
         public string NrRejestracyjny {get; private set;} = string.Empty;
     
@@ -11,7 +14,11 @@ namespace ParkingSystem.Models
 
         public Pojazd(string nrRejestracyjny)
         {
-            NrRejestracyjny = nrRejestracyjny;
+            if (!ValidationHelper.WalidujNumerRejestracyjny(nrRejestracyjny, out string? blad))
+            {
+                throw new ArgumentException(blad ?? "Nieprawidłowy numer rejestracyjny.");
+            }
+            NrRejestracyjny = nrRejestracyjny.ToUpper();
         }
 
         public abstract string WyswietlTypPojazdu();
@@ -21,7 +28,7 @@ namespace ParkingSystem.Models
             Console.WriteLine($"--- INFORMACJE O POJEZDZIE ---");
             Console.WriteLine($"Numer Rejestracyjny: {NrRejestracyjny}");
             Console.WriteLine($"Typ: {WyswietlTypPojazdu()}");
-            Console.WriteLine($"Zajmuje: {RozmiarWymagany}");
+            Console.WriteLine($"Zajmuje: {RozmiarWymagany} miejsc(a)");
         }
 
     }

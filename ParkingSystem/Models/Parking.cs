@@ -1,6 +1,7 @@
 using ParkingSystem.Models;
 using System.Linq;
 using ParkingSystem.Services;
+using ParkingSystem.Helpers;
 
 namespace ParkingSystem
 {
@@ -12,15 +13,31 @@ namespace ParkingSystem
         private string?[,] SiatkaMiejsc;
         private List<Pojazd> PojazdyNaParkingu;
         
-        private MSSqlManager _dbManager = new MSSqlManager();
+        private MSSqlManager? _dbManager;
         
         public Parking(int wiersze, int kolumny)
         {
+            if (wiersze <= 0 || kolumny <= 0)
+            {
+                throw new ArgumentException("Liczba wierszy i kolumn musi być większa od 0.");
+            }
+
             LiczbaWierszy = wiersze;
             LiczbaKolumn = kolumny;
 
             SiatkaMiejsc = new string[wiersze, kolumny];
             PojazdyNaParkingu = new List<Pojazd>();
+            
+            try
+            {
+                _dbManager = new MSSqlManager();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"OSTRZEŻENIE: Nie udało się połączyć z bazą danych: {ex.Message}");
+                Console.WriteLine("System będzie działał bez zapisywania transakcji do bazy.");
+                _dbManager = null;
+            }
         }
 
         public void Wizualizacja()
@@ -46,120 +63,155 @@ namespace ParkingSystem
         
         public bool DodajPojazd(Pojazd nowyPojazd, int startWiersz, int startKolumna)
         {
-            
-            if (startWiersz < 0 || startWiersz >= LiczbaWierszy || startKolumna < 0 || startKolumna >= LiczbaKolumn)
+            try
             {
-                Console.WriteLine($"Błąd: Współrzędne: ({startWiersz},{startKolumna}) poza parkingiem."); 
-                return false;
-            }
-            if (startWiersz % 3 == 2)
-            {
-                Console.WriteLine($"Błąd: Nie mozna parkowac na przejezdzie."); 
-                return false;
-            }
-            if (PojazdyNaParkingu.Any(p => p.NrRejestracyjny == nowyPojazd.NrRejestracyjny))
-            {
-                Console.WriteLine($"Błąd: Pojazd o numerze rejestracyjnym: {nowyPojazd.NrRejestracyjny} jest juz Parkingu.");
-                return false;
-            }
-            
-            
-            List<(int r, int k)> polaDoZajecia = new List<(int r, int k)>();
-
-            if (nowyPojazd.RozmiarWymagany == 1 || nowyPojazd.RozmiarWymagany == 2)
-            {
-                int requiredSize = nowyPojazd.RozmiarWymagany;
-
-                if (startKolumna + requiredSize > LiczbaKolumn)
+                if (nowyPojazd == null)
                 {
-                    Console.WriteLine($"Błąd: Brak miejsca dla {requiredSize} miejsc."); 
+                    throw new ArgumentNullException(nameof(nowyPojazd), "Pojazd nie może być null.");
+                }
+
+                if (!ValidationHelper.WalidujWspolrzedne(startWiersz, startKolumna, LiczbaWierszy, LiczbaKolumn, out string? bladWalidacji))
+                {
+                    Console.WriteLine($"Błąd: {bladWalidacji}");
                     return false;
                 }
 
-                for (int k = 0; k < requiredSize; k++)
+                if (startWiersz % 3 == 2)
                 {
-                    
-                    if (!string.IsNullOrEmpty(SiatkaMiejsc[startWiersz, startKolumna + k])) 
-                    {
-                        Console.WriteLine($"Błąd: Miejsce w rzędzie {startWiersz} i kolumnie {startKolumna + k} jest juz zajete."); 
-                        return false;
-                    }
-                    polaDoZajecia.Add((startWiersz, startKolumna + k));
+                    Console.WriteLine($"Błąd: Nie można parkować na przejezdzie."); 
+                    return false;
                 }
 
-            }
-            else if (nowyPojazd.RozmiarWymagany == 4)
-            {
-                
-                if (startWiersz + 1 >= LiczbaWierszy || startKolumna + 1 >= LiczbaKolumn)
+                if (PojazdyNaParkingu.Any(p => p.NrRejestracyjny.Equals(nowyPojazd.NrRejestracyjny, StringComparison.OrdinalIgnoreCase)))
                 {
-                    Console.WriteLine("BŁĄD: Za mało miejsca na autobus (wymagany blok 2x2).");
+                    Console.WriteLine($"Błąd: Pojazd o numerze rejestracyjnym: {nowyPojazd.NrRejestracyjny} jest już na parkingu.");
                     return false;
                 }
                 
-                
-                for (int r = startWiersz; r < startWiersz + 2; r++)
+                List<(int r, int k)> polaDoZajecia = new List<(int r, int k)>();
+
+                if (nowyPojazd.RozmiarWymagany == 1 || nowyPojazd.RozmiarWymagany == 2 || nowyPojazd.RozmiarWymagany == 3)
                 {
-                    
-                    if (r % 3 == 2)
+                    int requiredSize = nowyPojazd.RozmiarWymagany;
+
+                    if (startKolumna + requiredSize > LiczbaKolumn)
                     {
-                        Console.WriteLine($"BŁĄD: Rząd {r} jest przejazdem! Nie można parkować 2x2.");
+                        Console.WriteLine($"Błąd: Brak miejsca dla {requiredSize} miejsc."); 
                         return false;
                     }
 
-                    for (int k = startKolumna; k < startKolumna + 2; k++)
+                    for (int k = 0; k < requiredSize; k++)
                     {
-                        if (!string.IsNullOrEmpty(SiatkaMiejsc[r, k]))
+                        if (!string.IsNullOrEmpty(SiatkaMiejsc[startWiersz, startKolumna + k])) 
                         {
-                            Console.WriteLine($"BŁĄD: Miejsce w rzędzie {r}, kolumnie {k} jest zajęte.");
+                            Console.WriteLine($"Błąd: Miejsce w rzędzie {startWiersz} i kolumnie {startKolumna + k} jest już zajęte."); 
                             return false;
                         }
-                        polaDoZajecia.Add((r, k));
+                        polaDoZajecia.Add((startWiersz, startKolumna + k));
                     }
                 }
+                else if (nowyPojazd.RozmiarWymagany == 4)
+                {
+                    if (startWiersz + 1 >= LiczbaWierszy || startKolumna + 1 >= LiczbaKolumn)
+                    {
+                        Console.WriteLine("BŁĄD: Za mało miejsca na autobus (wymagany blok 2x2).");
+                        return false;
+                    }
+                    
+                    for (int r = startWiersz; r < startWiersz + 2; r++)
+                    {
+                        if (r % 3 == 2)
+                        {
+                            Console.WriteLine($"BŁĄD: Rząd {r} jest przejazdem! Nie można parkować 2x2.");
+                            return false;
+                        }
+
+                        for (int k = startKolumna; k < startKolumna + 2; k++)
+                        {
+                            if (!string.IsNullOrEmpty(SiatkaMiejsc[r, k]))
+                            {
+                                Console.WriteLine($"BŁĄD: Miejsce w rzędzie {r}, kolumnie {k} jest zajęte.");
+                                return false;
+                            }
+                            polaDoZajecia.Add((r, k));
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("BŁĄD: Nieznany wymagany rozmiar pojazdu.");
+                    return false;
+                }
+
+                foreach (var pole in polaDoZajecia)
+                {
+                    SiatkaMiejsc[pole.r, pole.k] = nowyPojazd.NrRejestracyjny;
+                    nowyPojazd.WspolrzedneZajete.Add(pole); 
+                }
+
+                PojazdyNaParkingu.Add(nowyPojazd);
+                
+                try
+                {
+                    _dbManager?.ZapiszTransakcje(nowyPojazd.NrRejestracyjny, DateTime.Now, "Przyjazd");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"OSTRZEŻENIE: Nie udało się zapisać transakcji do bazy: {ex.Message}");
+                }
+
+                Console.WriteLine($"POWODZENIE: Dodano {nowyPojazd.WyswietlTypPojazdu()} ({nowyPojazd.NrRejestracyjny}).");
+                return true;
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("BŁĄD: Nieznany wymagany rozmiar pojazdu.");
+                Console.WriteLine($"BŁĄD: Nie udało się dodać pojazdu: {ex.Message}");
                 return false;
             }
-
-            
-            foreach (var pole in polaDoZajecia)
-            {
-                SiatkaMiejsc[pole.r, pole.k] = nowyPojazd.NrRejestracyjny;
-                nowyPojazd.WspolrzedneZajete.Add(pole); 
-            }
-
-            PojazdyNaParkingu.Add(nowyPojazd);
-            
-            _dbManager.ZapiszTransakcje(nowyPojazd.NrRejestracyjny, DateTime.Now, "Przyjazd");
-
-            Console.WriteLine($"POWODZENIE: Dodano {nowyPojazd.WyswietlTypPojazdu()} ({nowyPojazd.NrRejestracyjny}).");
-            return true;
         }
+
         public bool UsunPojazd(string nrRejestracyjny)
         {
-            Pojazd? pojazdDoUsuniecia = PojazdyNaParkingu.FirstOrDefault(pojazdDoUsuniecia => pojazdDoUsuniecia.NrRejestracyjny == nrRejestracyjny);
-            
-            if (pojazdDoUsuniecia == null)
+            try
             {
-                Console.WriteLine($"BŁĄD: Pojazd o numerze {nrRejestracyjny} nie został znaleziony na parkingu.");
-                return false;            
+                if (string.IsNullOrWhiteSpace(nrRejestracyjny))
+                {
+                    throw new ArgumentException("Numer rejestracyjny nie może być pusty.");
+                }
+
+                Pojazd? pojazdDoUsuniecia = PojazdyNaParkingu.FirstOrDefault(p => 
+                    p.NrRejestracyjny.Equals(nrRejestracyjny, StringComparison.OrdinalIgnoreCase));
+                
+                if (pojazdDoUsuniecia == null)
+                {
+                    Console.WriteLine($"BŁĄD: Pojazd o numerze {nrRejestracyjny} nie został znaleziony na parkingu.");
+                    return false;            
+                }
+            
+                foreach (var pole in pojazdDoUsuniecia.WspolrzedneZajete)
+                {
+                    SiatkaMiejsc[pole.Wiersz, pole.Kolumna] = null;
+                }
+                
+                PojazdyNaParkingu.Remove(pojazdDoUsuniecia);
+
+                try
+                {
+                    _dbManager?.ZapiszTransakcje(pojazdDoUsuniecia.NrRejestracyjny, DateTime.Now, "Odjazd");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"OSTRZEŻENIE: Nie udało się zapisać transakcji do bazy: {ex.Message}");
+                }
+
+                Console.WriteLine($"POWODZENIE: Usunięto {pojazdDoUsuniecia.WyswietlTypPojazdu()} ({nrRejestracyjny}). Miejsca zwolnione.");
+                return true;
             }
-        
-
-        foreach (var pole in pojazdDoUsuniecia.WspolrzedneZajete)
-        {
-            SiatkaMiejsc[pole.Wiersz, pole.Kolumna] = null;
-        }
-        
-        PojazdyNaParkingu.Remove(pojazdDoUsuniecia);
-
-        _dbManager.ZapiszTransakcje(pojazdDoUsuniecia.NrRejestracyjny, DateTime.Now, "Odjazd");
-
-        Console.WriteLine($"POWODZENIE: Usunięto {pojazdDoUsuniecia.WyswietlTypPojazdu()} ({nrRejestracyjny}). Miejsca zwolnione.");
-        return true;
+            catch (Exception ex)
+            {
+                Console.WriteLine($"BŁĄD: Nie udało się usunąć pojazdu: {ex.Message}");
+                return false;
+            }
         }
     }
 }
