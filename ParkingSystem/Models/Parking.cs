@@ -12,7 +12,7 @@ namespace ParkingSystem
         private string?[,] SiatkaMiejsc;
         private List<Pojazd> PojazdyNaParkingu;
         
-        private MySqlManager _dbManager = new MySqlManager();
+        private MSSqlManager _dbManager = new MSSqlManager();
         
         public Parking(int wiersze, int kolumny)
         {

@@ -44,9 +44,9 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
-            "MySql.Data": {
+            "System.Data.SqlClient": {
               "target": "Package",
-              "version": "[9.5.0, )"
+              "version": "[4.8.6, )"
             }
           },
           "imports": [
