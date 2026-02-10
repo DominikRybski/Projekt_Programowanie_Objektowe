@@ -102,17 +102,3 @@ ParkingSystem/
 │   └── MSSqlManager.cs          # Obsługa bazy danych z try-catch
 └── appsettings.json             # Konfiguracja połączenia BD
 ```
-
-## 🎯 Następne kroki
-
-Aby uzyskać ocenę 5.0, należy dodać:
-
-1. Import pojazdów z pliku CSV
-2. Export transakcji do pliku CSV
-3. Przygotować dokumentację w LaTeX
-
-Aby złożyć projekt, należy:
-
-1. Przygotować pełną dokumentację (9 sekcji w LaTeX)
-2. Umieścić na repozytorium
-3. Złożyć w terminie po obronie
