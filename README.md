@@ -4,11 +4,15 @@ This project is a console-based parking lot management system developed in C#. I
 
 ## Features
 
-- **Grid-Based Parking:** Manages a parking lot represented as a grid of spaces.
+- **Grid-Based Parking:** Manages a parking lot represented as a grid of spaces with designated driveways.
 - **Multiple Vehicle Types:** Supports different vehicle types with specific space requirements:
-    - **Motorcycle:** Requires 1 parking space.
-    - **Car:** Requires 2 adjacent parking spaces.
-    - **Bus:** Requires a 2x2 block of parking spaces.
+  - **Motorcycle:** Requires 1 parking space.
+  - **Car:** Requires 2 adjacent parking spaces.
+  - **Truck:** Requires 3 adjacent parking spaces.
+  - **Bus:** Requires a 2x2 block of parking spaces.
+- **Interface-Based Architecture:** Implements clean interfaces (`IPojazd`, `ITransakcja`, `IWalidowalne`) for maintainable code structure.
+- **Data Validation:** Comprehensive validation of registration numbers, coordinates, and operation types.
+- **Exception Handling:** Robust error handling throughout the application with detailed error messages.
 - **Console Visualization:** Provides a simple text-based visualization of the parking lot's current occupancy.
 - **Parking Logic:** Implements rules for parking, such as checking for available space, preventing parking on driveways, and avoiding conflicts with already parked vehicles.
 - **Database Logging:** Records all vehicle arrivals and departures as transactions in a Microsoft SQL Server database.
@@ -57,6 +61,7 @@ CREATE TABLE Transakcje (
 3.  Update the `DefaultConnection` string with your SQL Server credentials.
 
 **`appsettings.json`:**
+
 ```json
 {
 	"ConnectionStrings": {
@@ -77,40 +82,71 @@ The program will execute the predefined simulation in `Program.cs`, which demons
 
 ### Example Execution Flow
 
-The main program (`Program.cs`) initializes a parking lot, adds vehicles of different types, visualizes the lot, and then removes the vehicles.
+The main program (`Program.cs`) demonstrates the parking system functionality with comprehensive error handling:
 
 ```csharp
-// Creates a 6x5 parking lot
-Parking mojParking = new Parking(6, 5); 
+try
+{
+    // Creates a 6x5 parking lot
+    Parking mojParking = new Parking(6, 5);
 
-// Creates different vehicle types
-Pojazd samochod = new Car("KR123");
-Pojazd motocykl = new Motorcycle("WA987");
-Pojazd autobus = new Bus("GD000");
+    // Creates different vehicle types with validated registration numbers
+    Pojazd motocykl = new Motorcycle("WA987");
+    Pojazd samochod = new Car("KR123");
+    Pojazd autobus = new Bus("GD000");
+    Pojazd ciezarowka = new Truck("PO456");
 
-// Parks the vehicles at specified coordinates
-mojParking.DodajPojazd(motocykl, 1, 3);
-mojParking.DodajPojazd(samochod, 0,2);
-mojParking.DodajPojazd(autobus, 3, 1);
+    // Parks the vehicles at specified coordinates
+    mojParking.DodajPojazd(motocykl, 1, 3);
+    mojParking.DodajPojazd(samochod, 0, 2);
+    mojParking.DodajPojazd(autobus, 3, 1);
+    mojParking.DodajPojazd(ciezarowka, 0, 0);
 
-// Displays the current state of the parking lot
-mojParking.Wizualizacja();
+    // Displays the current state of the parking lot
+    mojParking.Wizualizacja();
 
-// Removes vehicles from the lot
-mojParking.UsunPojazd("WA987");
-mojParking.UsunPojazd("KR123");
+    // Removes vehicles from the lot
+    mojParking.UsunPojazd("WA987");
+    mojParking.UsunPojazd("KR123");
 
-mojParking.Wizualizacja();
+    mojParking.Wizualizacja();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"ERROR: {ex.Message}");
+}
 ```
+
+### Validation
+
+The system validates:
+
+- **Registration numbers:** Must be 4-8 characters (2-3 letters + 2-5 alphanumeric characters, e.g., KR123, WA987)
+- **Coordinates:** Must be within parking lot boundaries
+- **Operation types:** Only "Przyjazd" (arrival) and "Odjazd" (departure) are allowed
 
 ## Project Structure
 
--   `Program.cs`: The entry point of the application, containing a sample simulation.
--   `Models/`: Contains the data models for the application.
-    -   `Pojazd.cs`: An abstract base class for all vehicles.
-    -   `Car.cs`, `Motorcycle.cs`, `Bus.cs`: Concrete vehicle classes inheriting from `Pojazd`.
-    -   `Parking.cs`: The core class that manages the parking lot grid and vehicle operations.
-    -   `Transakcja.cs`: Represents a single transaction record.
--   `MSSqlManager.cs`: A service class responsible for database interactions, specifically for writing transaction data.
--   `appsettings.json`: Configuration file for database connection strings.
--   `ParkingSystem.csproj`: The project file defining dependencies and project settings.
+```
+ParkingSystem/
+├── Program.cs                    # Entry point with demonstration scenarios
+├── Models/                       # Domain models
+│   ├── Pojazd.cs                # Abstract base class for all vehicles (implements IPojazd)
+│   ├── Car.cs                   # Car implementation (2 spaces)
+│   ├── Motorcycle.cs            # Motorcycle implementation (1 space)
+│   ├── Bus.cs                   # Bus implementation (4 spaces in 2x2 grid)
+│   ├── Truck.cs                 # Truck implementation (3 spaces)
+│   ├── Parking.cs               # Core parking lot management logic
+│   └── Transakcja.cs            # Transaction record model (implements ITransakcja)
+├── Interfaces/                   # Interface definitions
+│   ├── IPojazd.cs               # Vehicle interface
+│   ├── ITransakcja.cs           # Transaction interface
+│   └── IWalidowalne.cs          # Validation interface
+├── Helpers/                      # Utility classes
+│   └── ValidationHelper.cs      # Data validation methods
+├── Services/                     # Service layer
+│   └── MSSqlManager.cs          # Database operations handler
+├── appsettings.json             # Application configuration (not in repo)
+├── appsettings_example.json     # Configuration template
+└── ParkingSystem.csproj         # Project file
+```
