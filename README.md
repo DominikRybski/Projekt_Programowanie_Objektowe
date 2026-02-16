@@ -1,49 +1,59 @@
 # Parking System
 
-This project is a console-based parking lot management system developed in C#. It simulates the operations of a parking lot, including adding and removing vehicles of different types, visualizing the parking grid, and logging events to a SQL Server database.
+Konsolowy system zarządzania parkingiem napisany w C# (.NET 9).  
+Aplikacja zarządza zajętością miejsc na siatce, obsługuje różne typy pojazdów, waliduje dane wejściowe oraz zapisuje przyjazdy i odjazdy do Microsoft SQL Server.
 
-## Features
+## Funkcjonalności
 
-- **Grid-Based Parking:** Manages a parking lot represented as a grid of spaces with designated driveways.
-- **Multiple Vehicle Types:** Supports different vehicle types with specific space requirements:
-  - **Motorcycle:** Requires 1 parking space.
-  - **Car:** Requires 2 adjacent parking spaces.
-  - **Truck:** Requires 3 adjacent parking spaces.
-  - **Bus:** Requires a 2x2 block of parking spaces.
-- **Interface-Based Architecture:** Implements clean interfaces (`IPojazd`, `ITransakcja`, `IWalidowalne`) for maintainable code structure.
-- **Data Validation:** Comprehensive validation of registration numbers, coordinates, and operation types.
-- **Exception Handling:** Robust error handling throughout the application with detailed error messages.
-- **Console Visualization:** Provides a simple text-based visualization of the parking lot's current occupancy.
-- **Parking Logic:** Implements rules for parking, such as checking for available space, preventing parking on driveways, and avoiding conflicts with already parked vehicles.
-- **Database Logging:** Records all vehicle arrivals and departures as transactions in a Microsoft SQL Server database.
+- **Interaktywne menu konsolowe (1-5)**
+  - Dodaj pojazd
+  - Usuń pojazd
+  - Pokaż wizualizację parkingu
+  - Pokaż historię transakcji
+  - Wyjście
+- **Model parkingu oparty o siatkę** z przejazdami
+  - Wiersze przejazdów wyznacza reguła: `row % 3 == 2` (np. 2, 5, 8...)
+  - Na przejazdach parkowanie jest zablokowane
+- **Typy pojazdów i wymagane miejsce**
+  - Motocykl: 1 miejsce
+  - Samochód: 2 sąsiadujące miejsca (w jednym wierszu)
+  - Ciężarówka: 3 sąsiadujące miejsca (w jednym wierszu)
+  - Autobus: blok 2x2 (4 miejsca)
+- **Walidacja danych**
+  - Format numeru rejestracyjnego
+  - Współrzędne w granicach parkingu
+  - Dozwolone typy operacji (`Przyjazd`, `Odjazd`)
+- **Logowanie transakcji do bazy (SQL Server)**
+  - Przyjazd/odjazd zapisuje wpis w tabeli `Transakcje`
+  - Historia pobierana z bazy (`TOP N`, od najnowszych)
+- **Działanie awaryjne bez bazy**
+  - Gdy brak połączenia z DB, logika parkingu nadal działa (bez trwałego zapisu transakcji)
 
-## Technologies Used
+## Technologie
 
-- **C#** and **.NET 9.0**
-- **Microsoft SQL Server** for data persistence.
-- **Microsoft.Extensions.Configuration** for handling application settings.
+- C# / .NET 9 (`net9.0`)
+- Microsoft SQL Server
+- `System.Data.SqlClient`
+- `Microsoft.Extensions.Configuration`
+- `Microsoft.Extensions.Configuration.Json`
 
-## Setup and Configuration
+## Wymagania
 
-Follow these steps to set up and run the project locally.
+- .NET 9 SDK
+- Działająca instancja SQL Server
 
-### 1. Prerequisites
+## Konfiguracja
 
-- [.NET 9.0 SDK](https://dotnet.microsoft.com/download)
-- [Microsoft SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) (Express edition is sufficient)
-
-### 2. Clone the Repository
+### 1) Klonowanie repozytorium
 
 ```bash
 git clone https://github.com/DominikRybski/Projekt_Programowanie_Objektowe.git
 cd Projekt_Programowanie_Objektowe/ParkingSystem
 ```
 
-### 3. Database Setup
+### 2) Przygotowanie bazy danych
 
-1.  Connect to your SQL Server instance.
-2.  Create a new database (e.g., `ParkingDB`).
-3.  Run the following SQL script in your new database to create the `Transakcje` table:
+Utwórz bazę (np. `ParkingDB`) oraz tabelę:
 
 ```sql
 CREATE TABLE Transakcje (
@@ -54,99 +64,75 @@ CREATE TABLE Transakcje (
 );
 ```
 
-### 4. Configure Connection String
+### 3) Ustawienie connection stringa
 
-1.  In the `ParkingSystem` directory, create a new file named `appsettings.json`.
-2.  Copy the contents of `appsettings_example.json` into your new `appsettings.json` file.
-3.  Update the `DefaultConnection` string with your SQL Server credentials.
-
-**`appsettings.json`:**
+Użyj pliku `appsettings.json` w katalogu projektu:
 
 ```json
 {
-	"ConnectionStrings": {
-		"DefaultConnection": "Server=YOUR_SERVER_ADDRESS;Database=ParkingDB;User Id=YOUR_USERNAME;Password=YOUR_PASSWORD;Encrypt=false;"
-	}
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=127.0.0.1,1433;Database=ParkingDB;User Id=sa;Password=TwojeHaslo;Encrypt=false;"
+  }
 }
 ```
 
-## Usage
+Możesz zacząć od `appsettings_example.json`.
 
-Navigate to the `ParkingSystem` directory in your terminal and run the application using the .NET CLI:
+## Uruchomienie
 
 ```bash
 dotnet run
 ```
 
-The program will execute the predefined simulation in `Program.cs`, which demonstrates adding and removing vehicles, and will print the state of the parking lot to the console after each major operation.
+Po starcie aplikacja tworzy parking `6 x 5` i wyświetla interaktywne menu.
 
-### Example Execution Flow
+## Obsługa menu
 
-The main program (`Program.cs`) demonstrates the parking system functionality with comprehensive error handling:
+1. **Dodaj pojazd**
+   - wybór typu (1-4)
+   - podanie numeru rejestracyjnego
+   - podanie wiersza i kolumny startowej
+2. **Usuń pojazd**
+   - podanie numeru rejestracyjnego
+3. **Pokaż wizualizację parkingu**
+   - `[ ]` wolne, `[X]` zajęte, przejazdy oznaczone osobno
+4. **Pokaż historię transakcji**
+   - wyświetla ostatnie wpisy z bazy (do 50)
+5. **Wyjście**
 
-```csharp
-try
-{
-    // Creates a 6x5 parking lot
-    Parking mojParking = new Parking(6, 5);
+## Zasady walidacji
 
-    // Creates different vehicle types with validated registration numbers
-    Pojazd motocykl = new Motorcycle("WA987");
-    Pojazd samochod = new Car("KR123");
-    Pojazd autobus = new Bus("GD000");
-    Pojazd ciezarowka = new Truck("PO456");
+- Numer rejestracyjny: 4-8 znaków, format np. `KR123`, `WA987`, `GD12345`
+- Współrzędne muszą mieścić się w granicach parkingu
+- Typ operacji musi być `Przyjazd` albo `Odjazd`
+- Duplikat numeru rejestracyjnego na parkingu jest odrzucany
 
-    // Parks the vehicles at specified coordinates
-    mojParking.DodajPojazd(motocykl, 1, 3);
-    mojParking.DodajPojazd(samochod, 0, 2);
-    mojParking.DodajPojazd(autobus, 3, 1);
-    mojParking.DodajPojazd(ciezarowka, 0, 0);
+## Struktura projektu
 
-    // Displays the current state of the parking lot
-    mojParking.Wizualizacja();
-
-    // Removes vehicles from the lot
-    mojParking.UsunPojazd("WA987");
-    mojParking.UsunPojazd("KR123");
-
-    mojParking.Wizualizacja();
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"ERROR: {ex.Message}");
-}
-```
-
-### Validation
-
-The system validates:
-
-- **Registration numbers:** Must be 4-8 characters (2-3 letters + 2-5 alphanumeric characters, e.g., KR123, WA987)
-- **Coordinates:** Must be within parking lot boundaries
-- **Operation types:** Only "Przyjazd" (arrival) and "Odjazd" (departure) are allowed
-
-## Project Structure
-
-```
+```text
 ParkingSystem/
-├── Program.cs                    # Entry point with demonstration scenarios
-├── Models/                       # Domain models
-│   ├── Pojazd.cs                # Abstract base class for all vehicles (implements IPojazd)
-│   ├── Car.cs                   # Car implementation (2 spaces)
-│   ├── Motorcycle.cs            # Motorcycle implementation (1 space)
-│   ├── Bus.cs                   # Bus implementation (4 spaces in 2x2 grid)
-│   ├── Truck.cs                 # Truck implementation (3 spaces)
-│   ├── Parking.cs               # Core parking lot management logic
-│   └── Transakcja.cs            # Transaction record model (implements ITransakcja)
-├── Interfaces/                   # Interface definitions
-│   ├── IPojazd.cs               # Vehicle interface
-│   ├── ITransakcja.cs           # Transaction interface
-│   └── IWalidowalne.cs          # Validation interface
-├── Helpers/                      # Utility classes
-│   └── ValidationHelper.cs      # Data validation methods
-├── Services/                     # Service layer
-│   └── MSSqlManager.cs          # Database operations handler
-├── appsettings.json             # Application configuration (not in repo)
-├── appsettings_example.json     # Configuration template
-└── ParkingSystem.csproj         # Project file
+├── Program.cs
+├── MSSqlManager.cs
+├── Models/
+│   ├── Parking.cs
+│   ├── Pojazd.cs
+│   ├── Car.cs
+│   ├── Motorcycle.cs
+│   ├── Truck.cs
+│   ├── Bus.cs
+│   └── Transakcja.cs
+├── Interfaces/
+│   ├── IPojazd.cs
+│   ├── ITransakcja.cs
+│   └── IWalidowalne.cs
+├── Helpers/
+│   └── ValidationHelper.cs
+├── appsettings.json
+├── appsettings_example.json
+└── ParkingSystem.csproj
 ```
+
+## Uwagi
+
+- Operacje SQL obsługuje `MSSqlManager`.
+- Główna logika parkingu znajduje się w `Models/Parking`.
