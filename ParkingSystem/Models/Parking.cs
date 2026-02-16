@@ -213,6 +213,24 @@ namespace ParkingSystem
                 return false;
             }
         }
+
+        public List<string> PobierzHistorieTransakcji(int limit = 50)
+        {
+            if (limit <= 0)
+            {
+                throw new ArgumentException("Limit musi być większy od 0.", nameof(limit));
+            }
+
+            try
+            {
+                return _dbManager?.PobierzHistorieTransakcji(limit) ?? new List<string>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"OSTRZEŻENIE: Nie udało się pobrać historii transakcji: {ex.Message}");
+                return new List<string>();
+            }
+        }
     }
 }
 

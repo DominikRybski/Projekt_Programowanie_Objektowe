@@ -74,5 +74,41 @@ namespace ParkingSystem.Services
                 throw new InvalidOperationException($"Błąd zapisu transakcji do bazy danych: {ex.Message}", ex);
             }
         }
+
+        public List<string> PobierzHistorieTransakcji(int limit = 50)
+        {
+            if (limit <= 0)
+            {
+                throw new ArgumentException("Limit musi być większy od 0.", nameof(limit));
+            }
+
+            try
+            {
+                List<string> historia = new List<string>();
+                string query = "SELECT TOP (@limit) NrRejestracyjny, DataCzas, TypOperacji FROM Transakcje ORDER BY DataCzas DESC";
+
+                using SqlConnection conn = new SqlConnection(_connectionString);
+                conn.Open();
+
+                using SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@limit", limit);
+
+                using SqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    string nrRejestracyjny = reader["NrRejestracyjny"]?.ToString() ?? "BRAK";
+                    string typOperacji = reader["TypOperacji"]?.ToString() ?? "Nieznany";
+                    DateTime dataCzas = reader["DataCzas"] is DateTime data ? data : DateTime.MinValue;
+
+                    historia.Add($"[{dataCzas:yyyy-MM-dd HH:mm:ss}] {typOperacji}: {nrRejestracyjny}");
+                }
+
+                return historia;
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException($"Błąd pobierania historii transakcji z bazy danych: {ex.Message}", ex);
+            }
+        }
     }
 }
