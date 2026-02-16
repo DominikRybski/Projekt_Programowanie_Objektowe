@@ -48,7 +48,7 @@ Aplikacja zarządza zajętością miejsc na siatce, obsługuje różne typy poja
 
 ```bash
 git clone https://github.com/DominikRybski/ParkingSystem.git
-cd Projekt_Programowanie_Objektowe/ParkingSystem
+cd ParkingSystem
 ```
 
 ### 2) Przygotowanie bazy danych
